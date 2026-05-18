@@ -2110,7 +2110,7 @@ final class AppState: ObservableObject, @unchecked Sendable {
         let targetConversationID = conversationID
             ?? selectedWordPressAgentConversationID
             ?? startWordPressAgentConversation(siteID: selectedWordPressComSiteID)
-        let previewURL = WordPressAgentPreviewURLResolver.panelURL(for: url) ?? url
+        let previewURL = WordPressAgentPreviewURLResolver.defaultOpenURL(forPossiblyBare: url) ?? url
         let preview = WordPressAgentPreview(
             url: previewURL,
             title: title,
@@ -2686,7 +2686,7 @@ final class AppState: ObservableObject, @unchecked Sendable {
                     toolCallID: toolCall.toolCallID,
                     toolID: toolCall.toolID,
                     result: nil,
-                    error: "Preview needs a valid http or https URL."
+                    error: "Preview needs a valid public http or https URL."
                 ),
                 shouldReturnToAgent: true,
                 agentMessage: nil
@@ -2755,7 +2755,11 @@ final class AppState: ObservableObject, @unchecked Sendable {
     }
 
     private static func normalizedPreviewURL(from rawValue: String) -> URL? {
-        WordPressAgentPreviewURLResolver.normalizedURL(from: rawValue)
+        guard let url = WordPressAgentPreviewURLResolver.normalizedURL(from: rawValue),
+              !WordPressAgentPreviewURLResolver.isLocalOrPrivateNetworkURL(url) else {
+            return nil
+        }
+        return url
     }
 
     @discardableResult
